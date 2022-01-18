@@ -1,11 +1,6 @@
 package texnopos.uz.routing
 
 
-import texnopos.uz.db.DatabaseConnection
-import texnopos.uz.entities.BookEntity
-import texnopos.uz.models.Book
-import texnopos.uz.models.BookRequest
-import texnopos.uz.models.GenericResponse
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -13,7 +8,10 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
-import org.ktorm.dsl.delete
+import texnopos.uz.entities.BookEntity
+import texnopos.uz.models.Book
+import texnopos.uz.models.BookRequest
+import texnopos.uz.models.GenericResponse
 
 
 fun Route.bookRoutes(db: Database) {
@@ -45,13 +43,30 @@ fun Route.bookRoutes(db: Database) {
         }
 
         get {
-            val notes = db.from(BookEntity).select().map {
+            val books = db.from(BookEntity).select().map {
                 val id = it[BookEntity.id]
                 val book = it[BookEntity.bookName]
                 val author = it[BookEntity.author]
                 Book(id ?: -1, book ?: "", author ?: "")
             }
-            call.respond(notes)
+            if (books.isEmpty()) {
+                call.respond(
+                    HttpStatusCode.NotFound, GenericResponse(
+                        success = false,
+                        message = "Books not found",
+                        data = books
+                    )
+                )
+            } else {
+                call.respond(
+                    HttpStatusCode.OK,
+                    GenericResponse(
+                        success = true,
+                        message = "${books.size} books found",
+                        data = books
+                    )
+                )
+            }
         }
 
         get("/{id}") {
@@ -106,7 +121,7 @@ fun Route.bookRoutes(db: Database) {
                 )
             } else {
                 call.respond(
-                    HttpStatusCode.BadRequest,
+                    HttpStatusCode.NotModified,
                     GenericResponse(
                         success = false,
                         message = "Book fails to updated",
@@ -141,6 +156,5 @@ fun Route.bookRoutes(db: Database) {
                 )
             }
         }
-
     }
 }

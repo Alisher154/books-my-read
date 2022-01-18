@@ -1,6 +1,7 @@
 package texnopos.uz.routing
 
 import io.ktor.application.*
+import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import org.ktorm.database.Database
@@ -23,12 +24,21 @@ fun Route.userRoutes(db: Database){
                 val surname=it[UserEntity.surname]
                 UserResponse(id,username,name,surname)
             }
-            call.respond(GenericResponse(
-                success = true,
-                message = if (users.isEmpty()) "${users.size} user found"
-                else "Users not found",
-                data = users
-            ))
+            if (users.isEmpty()){
+                call.respond(
+                    HttpStatusCode.NotFound,GenericResponse(
+                    success = false,
+                    message = "Users not found",
+                    data = users
+                ))
+            }else{
+                call.respond(
+                    HttpStatusCode.OK, GenericResponse(
+                    success = true,
+                    message = "${users.size} user found",
+                    data = users
+                ))
+            }
         }
     }
 }
