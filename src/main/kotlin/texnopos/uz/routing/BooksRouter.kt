@@ -16,10 +16,10 @@ import org.ktorm.dsl.*
 import org.ktorm.dsl.delete
 
 
-fun Application.bookRoutes(db: Database) {
-    routing {
+fun Route.bookRoutes(db: Database) {
+    route("books") {
 
-        post("/add") {
+        post {
             val request = call.receive<BookRequest>()
             val result = db.insert(BookEntity) {
                 set(it.bookName, request.bookName)
@@ -44,7 +44,7 @@ fun Application.bookRoutes(db: Database) {
             }
         }
 
-        get("/books") {
+        get {
             val notes = db.from(BookEntity).select().map {
                 val id = it[BookEntity.id]
                 val book = it[BookEntity.bookName]
@@ -54,7 +54,7 @@ fun Application.bookRoutes(db: Database) {
             call.respond(notes)
         }
 
-        get("/books/{id}") {
+        get("/{id}") {
             val id = call.parameters["id"]?.toInt() ?: -1
             val note = db.from(BookEntity).select()
                 .where { BookEntity.id eq id }
@@ -85,7 +85,7 @@ fun Application.bookRoutes(db: Database) {
             }
         }
 
-        put("/books/{id}") {
+        put("/{id}") {
             val id = call.parameters["id"]?.toInt() ?: -1
             val updatedNote = call.receive<BookRequest>()
             val rowEffected = db.update(BookEntity) {
@@ -116,7 +116,7 @@ fun Application.bookRoutes(db: Database) {
             }
         }
 
-        delete("/books/{id}") {
+        delete("/{id}") {
             val id = call.parameters["id"]?.toInt() ?: -1
             val rowEffected = db.delete(BookEntity) {
                 it.id eq id
