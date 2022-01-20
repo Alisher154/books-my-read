@@ -8,7 +8,7 @@ import io.ktor.server.netty.*
 
 fun main() {
     //port = System.getenv("PORT").toInt()
-    embeddedServer(Netty, port = (System.getenv("PORT")?:"8080").toInt(), host = "0.0.0.0") {
+    embeddedServer(Netty, port = (System.getenv("PORT")?:"5000").toInt()) {
         configureSerialization()
         configureAuthentication()
         configureRouting()
