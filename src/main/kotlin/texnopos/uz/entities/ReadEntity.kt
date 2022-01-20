@@ -5,10 +5,11 @@ import org.ktorm.schema.int
 import org.ktorm.schema.long
 import org.ktorm.schema.varchar
 
-object BookEntity:Table<Nothing>(tableName = "books"){
+object ReadEntity:Table<Nothing>("read") {
     val id=int("id").primaryKey()
-    val bookName=varchar("bookName")
-    val author=varchar("author")
-    val posterId=int("posterId")
+    val readerId=int("readerId")
+    val bookId=int("bookId")
+    val conclusion=varchar("conclusion")
     val createdAt=long("createdAt")
+    val updatedAt=long("updatedAt")
 }

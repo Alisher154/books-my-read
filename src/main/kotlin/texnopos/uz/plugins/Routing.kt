@@ -1,11 +1,12 @@
 package texnopos.uz.plugins
 
-import texnopos.uz.routing.authenticationRoutes
-import texnopos.uz.routing.bookRoutes
 import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import texnopos.uz.db.DatabaseConnection
+import texnopos.uz.routing.authenticationRoutes
+import texnopos.uz.routing.bookRoutes
+import texnopos.uz.routing.booksReadRoutes
 import texnopos.uz.routing.userRoutes
 
 
@@ -18,5 +19,6 @@ fun Application.configureRouting() {
         bookRoutes(db)
         authenticationRoutes(db)
         userRoutes(db)
+        booksReadRoutes(db)
     }
 }

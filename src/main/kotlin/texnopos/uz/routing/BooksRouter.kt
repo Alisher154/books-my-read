@@ -9,19 +9,45 @@ import io.ktor.routing.*
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import texnopos.uz.entities.BookEntity
+import texnopos.uz.entities.UserEntity
 import texnopos.uz.models.Book
 import texnopos.uz.models.BookRequest
 import texnopos.uz.models.GenericResponse
+import texnopos.uz.models.UserResponse
 
 
 fun Route.bookRoutes(db: Database) {
+
     route("books") {
 
         post {
             val request = call.receive<BookRequest>()
+            if (!request.posterId.isExistUser(db)) {
+                call.respond(
+                    HttpStatusCode.BadRequest, GenericResponse(
+                        success = false,
+                        message = "User is not exist",
+                        data = ""
+                    )
+                )
+                return@post
+            }
+            if (request.bookName.isExistBook(db)) {
+                call.respond(
+                    HttpStatusCode.BadRequest, GenericResponse(
+                        success = false,
+                        message = "This book already exist",
+                        data = ""
+                    )
+                )
+                return@post
+            }
+
             val result = db.insert(BookEntity) {
                 set(it.bookName, request.bookName)
                 set(it.author, request.author)
+                set(it.posterId, request.posterId)
+                set(it.createdAt, System.currentTimeMillis())
             }
             if (result == 1) {
                 call.respond(
@@ -47,7 +73,8 @@ fun Route.bookRoutes(db: Database) {
                 val id = it[BookEntity.id]
                 val book = it[BookEntity.bookName]
                 val author = it[BookEntity.author]
-                Book(id ?: -1, book ?: "", author ?: "")
+                val posterId = it[BookEntity.posterId]
+                Book(id ?: -1, book ?: "", author ?: "", posterId ?: -1)
             }
             if (books.isEmpty()) {
                 call.respond(
@@ -71,21 +98,22 @@ fun Route.bookRoutes(db: Database) {
 
         get("/{id}") {
             val id = call.parameters["id"]?.toInt() ?: -1
-            val note = db.from(BookEntity).select()
+            val book = db.from(BookEntity).select()
                 .where { BookEntity.id eq id }
                 .map {
                     val _id = it[BookEntity.id]!!
-                    val note = it[BookEntity.bookName]!!
+                    val bookName = it[BookEntity.bookName]!!
                     val author = it[BookEntity.author]!!
-                    Book(_id, note, author)
+                    val posterId = it[BookEntity.posterId]!!
+                    Book(_id, bookName, author, posterId)
                 }.firstOrNull()
-            if (note != null) {
+            if (book != null) {
                 call.respond(
                     HttpStatusCode.OK,
                     GenericResponse(
                         success = true,
                         message = "Successfully",
-                        data = note
+                        data = book
                     )
                 )
             } else {
@@ -157,4 +185,16 @@ fun Route.bookRoutes(db: Database) {
             }
         }
     }
+}
+
+fun Int?.isExistUser(db: Database): Boolean {
+    return db.from(UserEntity).select().map { it[UserEntity.id] }.contains(this)
+}
+
+fun String.isExistBook(db: Database): Boolean {
+    return db.from(BookEntity).select().map { it[BookEntity.bookName] ?: "".lowercase() }.contains(this.lowercase())
+}
+
+fun Int?.isExistBook(db: Database): Boolean {
+    return db.from(BookEntity).select().map { it[BookEntity.id] }.contains(this)
 }
