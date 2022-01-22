@@ -5,7 +5,7 @@ import org.ktorm.schema.int
 import org.ktorm.schema.long
 import org.ktorm.schema.varchar
 
-object ReadEntity:Table<Nothing>("read") {
+object ReadEntity:Table<Nothing>("books_read") {
     val id=int("id").primaryKey()
     val readerId=int("readerId")
     val bookId=int("bookId")

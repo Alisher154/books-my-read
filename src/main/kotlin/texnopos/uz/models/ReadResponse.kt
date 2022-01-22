@@ -5,9 +5,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ReadResponse(
     val id: Int?,
-    val readerName:String?,
-    val readerSurname: String?,
-    val bookId: Int?,
+    val readerFullName:String?,
+    val bookName: String?,
     val conclusion: String?,
     val createdAt: Long?,
     val updatedAt: Long?

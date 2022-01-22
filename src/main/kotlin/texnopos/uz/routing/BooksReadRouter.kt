@@ -7,6 +7,9 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import org.ktorm.entity.add
+import org.ktorm.entity.sequenceOf
+import texnopos.uz.entities.BookEntity
 import texnopos.uz.entities.ReadEntity
 import texnopos.uz.entities.UserEntity
 import texnopos.uz.models.GenericResponse
@@ -28,15 +31,25 @@ fun Route.booksReadRoutes(db: Database) {
                 )
                 return@get
             }
-            val reads = db.from(UserEntity).crossJoin(ReadEntity).select()
+            val reads = db.from(ReadEntity)
+                .innerJoin(BookEntity, on = ReadEntity.bookId eq BookEntity.id)
+                .innerJoin(UserEntity, on = ReadEntity.readerId eq UserEntity.id)
+                .select(
+                    ReadEntity.id,
+                    UserEntity.name,
+                    UserEntity.surname,
+                    BookEntity.bookName,
+                    ReadEntity.conclusion,
+                    ReadEntity.createdAt,
+                    ReadEntity.updatedAt
+                )
                 .where {
                     ReadEntity.readerId eq id
                 }.map {
                     ReadResponse(
                         id = it[ReadEntity.id],
-                        readerName = it[UserEntity.name],
-                        readerSurname = it[UserEntity.surname],
-                        bookId = it[ReadEntity.bookId],
+                        readerFullName = "${it[UserEntity.name]} ${it[UserEntity.surname]}",
+                        bookName = it[BookEntity.bookName],
                         conclusion = it[ReadEntity.conclusion],
                         createdAt = it[ReadEntity.createdAt],
                         updatedAt = it[ReadEntity.updatedAt],

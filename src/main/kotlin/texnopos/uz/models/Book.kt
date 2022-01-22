@@ -7,5 +7,5 @@ data class Book(
     val id: Int,
     val bookName: String,
     val author:String,
-    val posterId:Int
+    val posterFullName:String
 )

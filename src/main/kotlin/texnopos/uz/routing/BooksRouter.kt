@@ -13,7 +13,6 @@ import texnopos.uz.entities.UserEntity
 import texnopos.uz.models.Book
 import texnopos.uz.models.BookRequest
 import texnopos.uz.models.GenericResponse
-import texnopos.uz.models.UserResponse
 
 
 fun Route.bookRoutes(db: Database) {
@@ -69,13 +68,18 @@ fun Route.bookRoutes(db: Database) {
         }
 
         get {
-            val books = db.from(BookEntity).select().map {
-                val id = it[BookEntity.id]
-                val book = it[BookEntity.bookName]
-                val author = it[BookEntity.author]
-                val posterId = it[BookEntity.posterId]
-                Book(id ?: -1, book ?: "", author ?: "", posterId ?: -1)
-            }
+            val books = db.from(BookEntity)
+                .innerJoin(UserEntity, on = BookEntity.posterId eq UserEntity.id)
+                .select(
+                    BookEntity.id, BookEntity.bookName,
+                    BookEntity.author, UserEntity.name, UserEntity.surname
+                ).map {
+                    val id = it[BookEntity.id]
+                    val book = it[BookEntity.bookName]
+                    val author = it[BookEntity.author]
+                    val posterFullName = "${it[UserEntity.name]} ${it[UserEntity.surname]}"
+                    Book(id ?: -1, book ?: "", author ?: "", posterFullName)
+                }
             if (books.isEmpty()) {
                 call.respond(
                     HttpStatusCode.NotFound, GenericResponse(
@@ -98,14 +102,19 @@ fun Route.bookRoutes(db: Database) {
 
         get("/{id}") {
             val id = call.parameters["id"]?.toInt() ?: -1
-            val book = db.from(BookEntity).select()
+            val book = db.from(BookEntity)
+                .innerJoin(UserEntity, on = BookEntity.posterId eq UserEntity.id)
+                .select(
+                    BookEntity.id, BookEntity.bookName,
+                    BookEntity.author, UserEntity.name, UserEntity.surname
+                )
                 .where { BookEntity.id eq id }
                 .map {
                     val _id = it[BookEntity.id]!!
                     val bookName = it[BookEntity.bookName]!!
                     val author = it[BookEntity.author]!!
-                    val posterId = it[BookEntity.posterId]!!
-                    Book(_id, bookName, author, posterId)
+                    val posterFullName = "${it[UserEntity.name]} ${it[UserEntity.surname]}"
+                    Book(_id, bookName, author, posterFullName)
                 }.firstOrNull()
             if (book != null) {
                 call.respond(
